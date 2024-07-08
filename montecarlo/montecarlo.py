@@ -1,31 +1,67 @@
 class Die():
-    def __init__(self):
-        pass
-    
-    def initializer():
-        pass
-    
-    def change_side_weight():
-        pass
-    
-    def roll():
-        pass
-    
-    def current_state():
-        pass
+    '''
+    Docstring
+    '''
+    def __init__(self, face_symbols):
+        # Test for numpy array
+        if not isinstance(face_symbols, np.ndarray):
+            raise TypeError('Face Argument must be NumPy array')
+          
+        # Tests that array is strings or numbers
+        if face_symbols.dtype.char not in ['U', 'l', 'd']:
+            raise TypeError('Faces must be strings or numbers')
+        
+        # Tests for unique faces
+        if len(set(face_symbols)) != len(face_symbols):
+            raise ValueError('Face values must be distinct')
+        
+        # Initialize weights as 1.0 for each face
+        self.faces = face_symbols
+        self.n_sides = len(face_symbols)
+        self.weights = [1.0 for i in face_symbols]
+        
+        # Save faces and weights in private data frame
+        # THIS NEEDS TO BE SET TO PRIVATE BUT IDK HOW
+        self.faces_weights = pd.DataFrame(self.weights, self.faces, columns=['weight'])
+        
+    def change_side_weight(self, face, new_weight):
+        if face not in self.faces_weights.index:
+            raise IndexError('That face does not exist on this die')
+        if type(new_weight) not in [int, float]:
+            raise ValueError('Weight is not a valid type')
+        self.faces_weights.loc[face] = new_weight
+        
+    def roll(self, n = 1):
+        results = []
+        self.probs = [i/sum(self.faces_weights.weight) for i in self.faces_weights.weight]
+        
+        for i in range(n):
+            result = self.faces_weights.sample(weights = self.probs).index.values[0]
+            results.append(result)
+            
+        return results
+        
+    def current_state(self):
+        print(self.faces_weights)
     
 class Game():
-    def __init__(self):
-        pass
     
-    def initializer():
-        pass
+    def __init__(self, die_list):
+        self.die_list = die_list
     
-    def play():
-        pass
+    def play(self, n):
+        self.df_index = []
+        for i in range(n):
+            self.df_index.append('Roll ' + str(i + 1))
+        
+        self.play_results = pd.DataFrame([], self.df_index)
+        for die in self.die_list:
+            self.play_results.insert(self.die_list.index(die), self.die_list.index(die) + 1, die.roll(n))
+            
+        return self.play_results
     
-    def last_round():
-        pass
+    def last_round(self):
+        return self.play_results.tail(1)
     
 class Analyzer():
     def __init__(self):
