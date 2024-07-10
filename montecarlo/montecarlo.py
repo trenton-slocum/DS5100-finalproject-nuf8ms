@@ -2,7 +2,10 @@ class Die():
     '''
     Docstring
     '''
-    def __init__(self, face_symbols):
+    def __init__(self, instance_name, face_symbols):
+        # Name of instance for future reference
+        self.name = instance_name
+        
         # Test for numpy array
         if not isinstance(face_symbols, np.ndarray):
             raise TypeError('Face Argument must be NumPy array')
@@ -22,28 +25,29 @@ class Die():
         
         # Save faces and weights in private data frame
         # THIS NEEDS TO BE SET TO PRIVATE BUT IDK HOW
-        self.faces_weights = pd.DataFrame(self.weights, self.faces, columns=['weight'])
+        self._faces_weights = pd.DataFrame(self.weights, self.faces, columns=['weight'])
         
     def change_side_weight(self, face, new_weight):
-        if face not in self.faces_weights.index:
+        if face not in self._faces_weights.index:
             raise IndexError('That face does not exist on this die')
         if type(new_weight) not in [int, float]:
             raise ValueError('Weight is not a valid type')
-        self.faces_weights.loc[face] = new_weight
+        
+        self._faces_weights.loc[face] = new_weight
         
     def roll(self, n = 1):
         results = []
-        self.probs = [i/sum(self.faces_weights.weight) for i in self.faces_weights.weight]
+        self.probs = [i/sum(self._faces_weights.weight) for i in self._faces_weights.weight]
         
         for i in range(n):
-            result = self.faces_weights.sample(weights = self.probs).index.values[0]
+            result = self._faces_weights.sample(weights = self.probs).index.values[0]
             results.append(result)
             
         return results
         
     def current_state(self):
-        print(self.faces_weights)
-    
+        print(self._faces_weights)
+        
 class Game():
     
     def __init__(self, die_list):
@@ -55,31 +59,41 @@ class Game():
             self.df_index.append('Roll ' + str(i + 1))
         
         self.play_results = pd.DataFrame([], self.df_index)
+        
         for die in self.die_list:
             self.play_results.insert(self.die_list.index(die), self.die_list.index(die) + 1, die.roll(n))
-            
-        return self.play_results
     
-    def last_round(self):
-        return self.play_results.tail(1)
-    
+    def last_round(self, form = 'wide'):
+        if form == 'narrow':
+            return self.play_results.stack().to_frame('Value')
+        elif form == 'wide':
+            return self.play_results
+        else:
+            raise ValueError('Must request for a "narrow" or "wide" table')
+        
 class Analyzer():
-    def __init__(self):
-        pass
+    def __init__(self, game_object):
+        if not isinstance(game_object, Game):
+            raise ValueError('Passed value is not a Game object')
+        
+        self.game = game_object
+        
+        self.outcome = game_object.play_results
     
-    def initializer():
-        pass
+    def jackpot(self):
+        count = 0
+        for i in self.outcome.nunique(axis=1) == 1:
+            if i == True:
+                count += 1
+        
+        return count
     
-    def jackpot():
-        pass
+    def face_count(self):
+        return pd.DataFrame(self.outcome).apply(pd.Series.value_counts, axis = 1).fillna(0)
     
-    def face_count():
-        pass
+    def combo_count(self, sort = True):
+        sorted_outcome = self.outcome.apply(sorted, axis = 1, result_type = 'broadcast')
+        return sorted_outcome.value_counts(sort = sort).to_frame('Combination Count')
     
-    def combo_count():
-        pass
-    
-    def permutation():
-        pass
-    
-    
+    def permutation_count(self, sort = True):
+        return self.outcome.value_counts(sort = sort).to_frame('Permutation Count')
