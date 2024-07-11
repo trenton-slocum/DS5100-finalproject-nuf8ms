@@ -1,10 +1,11 @@
+import numpy as np
+import pandas as pd
+
 class Die():
     '''
     Docstring
     '''
-    def __init__(self, instance_name, face_symbols):
-        # Name of instance for future reference
-        self.name = instance_name
+    def __init__(self, face_symbols):
         
         # Test for numpy array
         if not isinstance(face_symbols, np.ndarray):
@@ -20,11 +21,9 @@ class Die():
         
         # Initialize weights as 1.0 for each face
         self.faces = face_symbols
-        self.n_sides = len(face_symbols)
         self.weights = [1.0 for i in face_symbols]
         
         # Save faces and weights in private data frame
-        # THIS NEEDS TO BE SET TO PRIVATE BUT IDK HOW
         self._faces_weights = pd.DataFrame(self.weights, self.faces, columns=['weight'])
         
     def change_side_weight(self, face, new_weight):
@@ -46,7 +45,7 @@ class Die():
         return results
         
     def current_state(self):
-        print(self._faces_weights)
+        return self._faces_weights
         
 class Game():
     
@@ -58,16 +57,16 @@ class Game():
         for i in range(n):
             self.df_index.append('Roll ' + str(i + 1))
         
-        self.play_results = pd.DataFrame([], self.df_index)
+        self._play_results = pd.DataFrame([], self.df_index)
         
         for die in self.die_list:
-            self.play_results.insert(self.die_list.index(die), self.die_list.index(die) + 1, die.roll(n))
+            self._play_results.insert(self.die_list.index(die), self.die_list.index(die) + 1, die.roll(n))
     
     def last_round(self, form = 'wide'):
         if form == 'narrow':
-            return self.play_results.stack().to_frame('Value')
+            return self._play_results.stack().to_frame('Value')
         elif form == 'wide':
-            return self.play_results
+            return self._play_results
         else:
             raise ValueError('Must request for a "narrow" or "wide" table')
         
@@ -78,7 +77,7 @@ class Analyzer():
         
         self.game = game_object
         
-        self.outcome = game_object.play_results
+        self.outcome = game_object._play_results
     
     def jackpot(self):
         count = 0
