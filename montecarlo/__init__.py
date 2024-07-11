@@ -1,5 +1,2 @@
-print("Welcome to MonteCarlo! Are you rich? Are you poor?\
-        I don't really care. Prepare to lose some money.\
-        Or if you can't actually bet money because this is\
-        just a python program, then just prepare to lose.\
-        Good day, and good luck")
+print('Welcome to Montecarlo! Disclaimer: If you are using this program for gambling,\
+      I cannot be held accountable. Have fun losing money!')
